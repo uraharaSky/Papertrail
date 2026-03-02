@@ -1,0 +1,2 @@
+# <u>**Papertrail**</u>
+### *Papertrail is a Chrome extension that helps you capture, understand, and rediscover the articles you read online. It can instantly summarize any page, extract the key ideas, and store articles in a searchable personal archive. Instead of losing valuable reads in bookmarks, Papertrail builds a clean trail of knowledge you can search and revisit anytime.*
