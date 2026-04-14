@@ -5,8 +5,17 @@
 
   "permissions": ["activeTab", "scripting", "storage"],
 
+  "host_permissions": [
+    "https://api.groq.com/*"
+  ],
+
   "action": {
     "default_popup": "popup.html"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   },
 
   "content_scripts": [

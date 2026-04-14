@@ -13,9 +13,25 @@ document.getElementById("summariseBtn").addEventListener("click", async () => {
             alert("No text found on this page.");
             return;
         }
+        const output = document.getElementById("results");
 
-        const summary = generateSummary(response.text);
-        displaySummary(summary);
+        output.innerText = "📖 Reading page...";
+
+        setTimeout(async () => {
+            output.innerText = "🧠 Understanding...";
+
+            chrome.runtime.sendMessage(
+                { type: "SUMMARISE", text: response.text },
+                (res) => {
+                    if (!res || !res.summary) {
+                        output.innerText = "Failed to generate summary.";
+                        return;
+                    }
+
+                    displaySummary(res.summary);
+                }
+            );
+        }, 100);
     });
 });
 
@@ -23,19 +39,21 @@ document.getElementById("SaveBtn").addEventListener("click", async () => {
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    chrome.tabs.sendMessage(tab.id, { type: "GET_PAGE_DATA" }, (response) => {
+    chrome.tabs.sendMessage(tab.id, { type: "GET_PAGE_DATA" }, async (response) => {
 
         if (chrome.runtime.lastError || !response) {
             alert("Couldn't read page");
             return;
         }
 
+        const summary = await summariseWithGroq(response.text);
+
         const article = {
             id: Date.now(),
             title: response.title,
             url: response.url,
             text: response.text,
-            summary: generateSummary(response.text)
+            summary: summary
         };
 
         chrome.storage.local.get(["articles"], (result) => {
@@ -44,7 +62,7 @@ document.getElementById("SaveBtn").addEventListener("click", async () => {
 
             articles.push(article);
 
-            chrome.storage.local.set({ articles }, () => {
+            chrome.storage.local.set({articles}, () => {
                 alert("Saved to Papertrail 📄");
 
                 // reload archive UI
@@ -57,6 +75,7 @@ document.getElementById("SaveBtn").addEventListener("click", async () => {
 document.getElementById("searchInput").addEventListener("input", (e) => {
 
     const query = e.target.value.toLowerCase();
+    console.log("Searching for...", query);
 
     chrome.storage.local.get(["articles"], (result) => {
 
@@ -132,20 +151,18 @@ function generateSummary(text) {
 
 
 // Display summary
-function displaySummary(summaryArray) {
-
+function displaySummary(summaryText) {
     const resultsDiv = document.getElementById("results");
 
     resultsDiv.innerHTML = "<h3>Summary</h3>";
 
-    summaryArray.forEach(sentence => {
-        const div = document.createElement("div");
+    const formatted = formatSummary(summaryText);
 
-        div.className = "summary-item";
-        div.innerText = sentence;
+    const div = document.createElement("div");
+    div.className = "summary-item";
+    div.innerText = formatted;
 
-        resultsDiv.appendChild(div);
-    });
+    resultsDiv.appendChild(div);
 }
 
 //To Display articles
@@ -173,4 +190,11 @@ function displayArticles(articles) {
 
         resultsDiv.appendChild(div);
     });
+}
+
+
+function formatSummary(text) {
+    return text
+        .replace("TLDR:", "\n📌 TLDR\n")
+        .replace("KEY POINTS:", "\n🔑 Key Points\n");
 }
