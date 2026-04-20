@@ -15,10 +15,10 @@ document.getElementById("summariseBtn").addEventListener("click", async () => {
         }
         const output = document.getElementById("results");
 
-        output.innerText = "📖 Reading page...";
+        output.innerText = "Reading page...";
 
         setTimeout(async () => {
-            output.innerText = "🧠 Understanding...";
+            output.innerText = "Understanding...";
 
             chrome.runtime.sendMessage(
                 { type: "SUMMARISE", text: response.text },
@@ -40,7 +40,7 @@ document.getElementById("summariseBtn").addEventListener("click", async () => {
 document.getElementById("SaveBtn").addEventListener("click", async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    chrome.tabs.sendMessage(tab.id, {type: "GET_PAGE_DATA"}, (response) => {
+    chrome.tabs.sendMessage(tab.id, {type: "GET_PAGE_DATA"}, async (response) => {
         if (chrome.runtime.lastError || !response) {
             alert("Couldn't read the page");
             return;
@@ -64,26 +64,72 @@ document.getElementById("SaveBtn").addEventListener("click", async () => {
                 loadArticles();
             });
         });
+
+        try {
+            await fetch("http://localhost:8000/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: response.title,
+                    text: response.text,
+                    url: response.url
+                })
+            });
+        } catch (err) {
+            console.error("Backend save failed:", err);
+        }
     });
 });
 
-document.getElementById("searchInput").addEventListener("input", (e) => {
+document.getElementById("searchInput").addEventListener("keydown", async (e) => {
 
-    const query = e.target.value.toLowerCase();
-    console.log("Searching for...", query);
+    if (e.key !== "Enter") return;
 
-    chrome.storage.local.get(["articles"], (result) => {
+    const query = e.target.value.trim();
 
-        const articles = result.articles || [];
+    if (!query) return;
 
-        const filtered = articles.filter(article =>
-            article.title.toLowerCase().includes(query) ||
-            article.text.toLowerCase().includes(query)
-        );
+    console.log("🔍 Searching for:", query);
 
-        displayArticles(filtered);
-    });
+    try {
+        const res = await fetch("http://localhost:8000/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: query })
+        });
+
+        const data = await res.json();
+
+        console.log("📦 Backend response:", data);
+
+        if (!data.match) {
+            document.getElementById("results").innerText = "Nothing found...";
+            return;
+        }
+
+        displaySearchResult(data.match);
+
+    } catch (err) {
+        console.error("❌ Search error:", err);
+        document.getElementById("results").innerText = "Search failed.";
+    }
 });
+
+
+function displaySearchResult(article) {
+    const resultsDiv = document.getElementById("results");
+
+    const domain = new URL(article.url).hostname;
+
+    resultsDiv.innerHTML = `
+        <h3>Found something 👀</h3>
+        <div class="article-card">
+            <strong>${article.title}</strong><br/>
+            <small>${domain}</small><br/>
+            <a href="${article.url}" target="_blank">Open</a>
+        </div>
+    `;
+}
 
 function loadArticles() {
 
