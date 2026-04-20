@@ -35,37 +35,32 @@ document.getElementById("summariseBtn").addEventListener("click", async () => {
     });
 });
 
-document.getElementById("SaveBtn").addEventListener("click", async () => {
 
+
+document.getElementById("SaveBtn").addEventListener("click", async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    chrome.tabs.sendMessage(tab.id, { type: "GET_PAGE_DATA" }, async (response) => {
-
+    chrome.tabs.sendMessage(tab.id, {type: "GET_PAGE_DATA"}, (response) => {
         if (chrome.runtime.lastError || !response) {
-            alert("Couldn't read page");
+            alert("Couldn't read the page");
             return;
         }
-
-        const summary = await summariseWithGroq(response.text);
 
         const article = {
             id: Date.now(),
             title: response.title,
             url: response.url,
             text: response.text,
-            summary: summary
+            summary: null
         };
 
         chrome.storage.local.get(["articles"], (result) => {
-
             const articles = result.articles || [];
 
             articles.push(article);
 
             chrome.storage.local.set({articles}, () => {
-                alert("Saved to Papertrail 📄");
-
-                // reload archive UI
+                alert("Successfully stored articles.");
                 loadArticles();
             });
         });

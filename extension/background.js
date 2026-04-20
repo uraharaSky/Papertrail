@@ -1,28 +1,9 @@
 import { API_KEY } from "./config.js";
 
 async function summariseWithGroq(text) {
-    const cleanText = text
-        .replace(/\s+/g, " ")
-        .slice(0, 6000);
-
-    const prompt = `
-Summarize the content clearly.
-
-Return in this format:
-
-TLDR:
-...
-
-KEY POINTS:
-- ...
-- ...
-- ...
-
-CONTENT:
-${cleanText}
-`;
-
     try {
+        const cleanText = text.slice(0, 6000);
+
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -30,20 +11,46 @@ ${cleanText}
                 "Authorization": `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "llama3-70b-8192",
+                model: "llama-3.1-8b-instant",
                 messages: [
-                    { role: "user", content: prompt }
-                ],
-                temperature: 0.3
+                    {
+                        role: "user",
+                        content: `Summarize the following article in a concise way.
+
+                Give:
+                - A short TLDR (2-3 lines)
+                - 3-5 key bullet points
+                
+                Article:
+                ${cleanText}`
+                    }
+                ]
             })
         });
 
-        const data = await response.json();
+        const data = await response.json(); // ✅ now response exists
+
+        if (!data || typeof data !== "object") {
+            console.log("Invalid response format:", data);
+            return "Error: Invalid API response";
+        }
+
+        if (data.error) {
+            console.log("Groq API Error:", data.error);
+            return `Error: ${data.error.message || "Unknown API error"}`;
+        }
+
+        if (!data.choices || !Array.isArray(data.choices)) {
+            console.log("Missing choices in response:", data);
+            return "Error generating summary (no choices)";
+        }
         return data.choices[0].message.content;
 
+
+
     } catch (err) {
-        const data = await response.json();
-        console.log("Groq response:", data);
+        console.error(err);
+        return "API error";
     }
 }
 
