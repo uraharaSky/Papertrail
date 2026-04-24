@@ -1,30 +1,3 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="">-->
-<!--<head>-->
-<!--    <title>Papertrail</title>-->
-
-<!--    <link rel="stylesheet" href="styles.css">-->
-<!--</head>-->
-<!--<body>-->
-
-<!--<h3>Papertrail</h3>-->
-
-<!--<button id="SaveBtn">Save Page</button>-->
-<!--<button id="summariseBtn">Summarise It</button>-->
-
-<!--<input-->
-<!--    type = "text"-->
-<!--    id = "searchInput"-->
-<!--    placeholder = "Search your archive...."-->
-<!--/>-->
-
-<!--<div id="results"></div>-->
-
-<!--<script src="popup.js"></script>-->
-
-<!--</body>-->
-<!--</html>-->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,9 +10,7 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     HEADER
-═══════════════════════════════════════ -->
+<!-- Header with branding and archive count. -->
 <header class="pt-header">
     <div class="pt-logo">
         <svg class="pt-logo-icon" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,21 +29,17 @@
     <div id="savedCount" class="pt-count">— saved</div>
 </header>
 
-<!-- ═══════════════════════════════════════
-     TAB BAR
-═══════════════════════════════════════ -->
+<!-- Tab navigation for save, summary, and archive views. -->
 <nav class="pt-tabs">
     <button class="pt-tab active" data-tab="save">Save</button>
     <button class="pt-tab" data-tab="summary">Summary</button>
     <button class="pt-tab" data-tab="archive">Archive</button>
 </nav>
 
-<!-- ═══════════════════════════════════════
-     TAB: SAVE
-═══════════════════════════════════════ -->
+<!-- Save view for archiving the current page. -->
 <section class="pt-panel active" id="tab-save">
 
-    <!-- Current page preview -->
+    <!-- Preview of the active browser tab. -->
     <div class="pt-page-card" id="pagePreview">
         <div class="pt-page-domain">
             <span class="pt-favicon" id="faviconEl"></span>
@@ -84,13 +51,13 @@
         </div>
     </div>
 
-    <!-- Tags -->
+    <!-- Optional tags for the saved article. -->
     <div class="pt-field">
         <label class="pt-label" for="tagInput">Tags</label>
         <input class="pt-input" type="text" id="tagInput" placeholder="e.g. climate, research, design" />
     </div>
 
-    <!-- Note -->
+    <!-- Optional note stored with the article. -->
     <div class="pt-field">
         <label class="pt-label" for="noteInput">Note</label>
         <textarea class="pt-textarea" id="noteInput" placeholder="A quick thought about this article…"></textarea>
@@ -101,14 +68,12 @@
         Save to archive
     </button>
 
-    <!-- Toast -->
+    <!-- Temporary save confirmation. -->
     <div class="pt-toast" id="saveToast">Saved!</div>
 
 </section>
 
-<!-- ═══════════════════════════════════════
-     TAB: SUMMARY
-═══════════════════════════════════════ -->
+<!-- Summary view for AI-generated output. -->
 <section class="pt-panel" id="tab-summary">
 
     <div class="pt-summary-header">
@@ -120,7 +85,7 @@
 
     <div class="pt-divider-dashed"></div>
 
-    <!-- Skeleton shown while loading -->
+    <!-- Placeholder lines shown while a summary is loading. -->
     <div id="summarySkeleton" class="pt-skeleton-wrap">
         <div class="pt-skeleton" style="width:100%; height:12px;"></div>
         <div class="pt-skeleton" style="width:88%; height:12px;"></div>
@@ -128,10 +93,10 @@
         <div class="pt-skeleton" style="width:72%; height:12px; margin-top:4px;"></div>
     </div>
 
-    <!-- Summary text populated by JS -->
+    <!-- Summary body inserted by popup.js. -->
     <div id="summaryText" class="pt-summary-text" style="display:none;"></div>
 
-    <!-- Key points populated by JS -->
+    <!-- Reserved area for extracted key points. -->
     <div id="keyPointsWrap" style="display:none;">
         <div class="pt-keypoints-label">Key takeaways</div>
         <ul class="pt-keypoints" id="keyPointsList"></ul>
@@ -144,9 +109,7 @@
 
 </section>
 
-<!-- ═══════════════════════════════════════
-     TAB: ARCHIVE
-═══════════════════════════════════════ -->
+<!-- Archive view for search and saved articles. -->
 <section class="pt-panel" id="tab-archive">
 
     <div class="pt-search-bar">
@@ -159,26 +122,24 @@
     </div>
     <div class="pt-search-hint">Try: "what did I save about AI last week?"</div>
 
-    <!-- Filter pills -->
+    <!-- Reserved row for archive filters. -->
     <div class="pt-filter-row" id="filterRow"></div>
 
-    <!-- Result meta -->
+    <!-- Reserved area for result counts or search status. -->
     <div class="pt-result-meta" id="resultMeta"></div>
 
-    <!-- Results list -->
+    <!-- Search results or saved article cards. -->
     <div id="results" class="pt-results"></div>
 
-    <!-- Empty state -->
+    <!-- Shown when the archive has no saved articles. -->
     <div class="pt-empty" id="emptyState" style="display:none;">
-        <div class="pt-empty-icon">◎</div>
+        <div class="pt-empty-icon">◍</div>
         <div class="pt-empty-text">No articles saved yet.<br/>Head to Save to begin your archive.</div>
     </div>
 
 </section>
 
-<!-- ═══════════════════════════════════════
-     FOOTER
-═══════════════════════════════════════ -->
+<!-- Footer actions and shortcut hint. -->
 <footer class="pt-footer">
     <span class="pt-footer-tip" id="footerTip">Ctrl+Shift+S to save quickly</span>
     <button class="pt-footer-link" id="clearAllBtn">clear all</button>
