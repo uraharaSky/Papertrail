@@ -1,26 +1,189 @@
-<!DOCTYPE html>
-<html lang="">
-<head>
-    <title>Papertrail</title>
+<!--<!DOCTYPE html>-->
+<!--<html lang="">-->
+<!--<head>-->
+<!--    <title>Papertrail</title>-->
 
-    <link rel="stylesheet" href="styles.css">
+<!--    <link rel="stylesheet" href="styles.css">-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<h3>Papertrail</h3>-->
+
+<!--<button id="SaveBtn">Save Page</button>-->
+<!--<button id="summariseBtn">Summarise It</button>-->
+
+<!--<input-->
+<!--    type = "text"-->
+<!--    id = "searchInput"-->
+<!--    placeholder = "Search your archive...."-->
+<!--/>-->
+
+<!--<div id="results"></div>-->
+
+<!--<script src="popup.js"></script>-->
+
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Papertrail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<h3>Papertrail</h3>
+<!-- ═══════════════════════════════════════
+     HEADER
+═══════════════════════════════════════ -->
+<header class="pt-header">
+    <div class="pt-logo">
+        <svg class="pt-logo-icon" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="13" height="17" rx="2" fill="rgba(247,243,235,0.15)" stroke="rgba(247,243,235,0.35)" stroke-width="1"/>
+            <rect x="7" y="2.5" width="13" height="17" rx="2" fill="rgba(247,243,235,0.15)" stroke="rgba(247,243,235,0.35)" stroke-width="1"/>
+            <rect x="10" y="1" width="13" height="17" rx="2" fill="rgba(247,243,235,0.88)" stroke="rgba(247,243,235,0.5)" stroke-width="1"/>
+            <line x1="13" y1="5.5" x2="20" y2="5.5" stroke="#1a1209" stroke-width="1" stroke-linecap="round" opacity="0.45"/>
+            <line x1="13" y1="8.5" x2="20" y2="8.5" stroke="#1a1209" stroke-width="1" stroke-linecap="round" opacity="0.45"/>
+            <line x1="13" y1="11.5" x2="17.5" y2="11.5" stroke="#1a1209" stroke-width="1" stroke-linecap="round" opacity="0.45"/>
+        </svg>
+        <div class="pt-logo-text">
+            <span class="pt-logo-name">PaperTrail</span>
+            <span class="pt-logo-sub">Your reading archive</span>
+        </div>
+    </div>
+    <div id="savedCount" class="pt-count">— saved</div>
+</header>
 
-<button id="SaveBtn">Save Page</button>
-<button id="summariseBtn">Summarise It</button>
+<!-- ═══════════════════════════════════════
+     TAB BAR
+═══════════════════════════════════════ -->
+<nav class="pt-tabs">
+    <button class="pt-tab active" data-tab="save">Save</button>
+    <button class="pt-tab" data-tab="summary">Summary</button>
+    <button class="pt-tab" data-tab="archive">Archive</button>
+</nav>
 
-<input
-    type = "text"
-    id = "searchInput"
-    placeholder = "Search your archive...."
-/>
+<!-- ═══════════════════════════════════════
+     TAB: SAVE
+═══════════════════════════════════════ -->
+<section class="pt-panel active" id="tab-save">
 
-<div id="results"></div>
+    <!-- Current page preview -->
+    <div class="pt-page-card" id="pagePreview">
+        <div class="pt-page-domain">
+            <span class="pt-favicon" id="faviconEl"></span>
+            <span id="pageDomain">loading…</span>
+        </div>
+        <div class="pt-page-title" id="pageTitle">Detecting current page…</div>
+        <div class="pt-page-meta">
+            <span class="pt-pill pill-read" id="readTime">— min read</span>
+        </div>
+    </div>
+
+    <!-- Tags -->
+    <div class="pt-field">
+        <label class="pt-label" for="tagInput">Tags</label>
+        <input class="pt-input" type="text" id="tagInput" placeholder="e.g. climate, research, design" />
+    </div>
+
+    <!-- Note -->
+    <div class="pt-field">
+        <label class="pt-label" for="noteInput">Note</label>
+        <textarea class="pt-textarea" id="noteInput" placeholder="A quick thought about this article…"></textarea>
+    </div>
+
+    <button class="pt-btn-primary" id="SaveBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Save to archive
+    </button>
+
+    <!-- Toast -->
+    <div class="pt-toast" id="saveToast">Saved!</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════
+     TAB: SUMMARY
+═══════════════════════════════════════ -->
+<section class="pt-panel" id="tab-summary">
+
+    <div class="pt-summary-header">
+        <span class="pt-badge badge-ai">AI Summary</span>
+        <span class="pt-summary-time" id="summaryTime"></span>
+    </div>
+
+    <div class="pt-summary-title" id="summaryPageTitle">Current page</div>
+
+    <div class="pt-divider-dashed"></div>
+
+    <!-- Skeleton shown while loading -->
+    <div id="summarySkeleton" class="pt-skeleton-wrap">
+        <div class="pt-skeleton" style="width:100%; height:12px;"></div>
+        <div class="pt-skeleton" style="width:88%; height:12px;"></div>
+        <div class="pt-skeleton" style="width:94%; height:12px;"></div>
+        <div class="pt-skeleton" style="width:72%; height:12px; margin-top:4px;"></div>
+    </div>
+
+    <!-- Summary text populated by JS -->
+    <div id="summaryText" class="pt-summary-text" style="display:none;"></div>
+
+    <!-- Key points populated by JS -->
+    <div id="keyPointsWrap" style="display:none;">
+        <div class="pt-keypoints-label">Key takeaways</div>
+        <ul class="pt-keypoints" id="keyPointsList"></ul>
+    </div>
+
+    <div class="pt-summary-actions">
+        <button class="pt-btn-sm" id="copySummaryBtn">Copy</button>
+        <button class="pt-btn-sm btn-primary-sm" id="summariseBtn">Summarise page</button>
+    </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════
+     TAB: ARCHIVE
+═══════════════════════════════════════ -->
+<section class="pt-panel" id="tab-archive">
+
+    <div class="pt-search-bar">
+        <svg class="pt-search-icon" viewBox="0 0 14 14" fill="none">
+            <circle cx="5.8" cy="5.8" r="4.3" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="9" y1="9" x2="13" y2="13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <input class="pt-search-input" type="text" id="searchInput" placeholder="ask anything about your articles…" />
+        <span class="pt-groq-badge">GROQ</span>
+    </div>
+    <div class="pt-search-hint">Try: "what did I save about AI last week?"</div>
+
+    <!-- Filter pills -->
+    <div class="pt-filter-row" id="filterRow"></div>
+
+    <!-- Result meta -->
+    <div class="pt-result-meta" id="resultMeta"></div>
+
+    <!-- Results list -->
+    <div id="results" class="pt-results"></div>
+
+    <!-- Empty state -->
+    <div class="pt-empty" id="emptyState" style="display:none;">
+        <div class="pt-empty-icon">◎</div>
+        <div class="pt-empty-text">No articles saved yet.<br/>Head to Save to begin your archive.</div>
+    </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════ -->
+<footer class="pt-footer">
+    <span class="pt-footer-tip" id="footerTip">Ctrl+Shift+S to save quickly</span>
+    <button class="pt-footer-link" id="clearAllBtn">clear all</button>
+</footer>
 
 <script src="popup.js"></script>
-
 </body>
 </html>
