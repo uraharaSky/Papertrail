@@ -1,12 +1,3 @@
-// Coordinates popup startup.
-const App = {
-    init() {
-        UI.initTabs();
-        Actions.bindEvents();
-        Storage.loadArticles();
-    }
-};
-
 // DOM rendering helpers.
 const UI = {
 
@@ -63,6 +54,7 @@ const UI = {
     },
 
     renderArticles(articles) {
+
         const resultsDiv = document.getElementById("results");
         resultsDiv.innerHTML = "";
 
@@ -74,31 +66,49 @@ const UI = {
         document.getElementById("emptyState").style.display = "none";
 
         articles.forEach(article => {
+
             const div = document.createElement("div");
             div.className = "article-card";
 
             const domain = new URL(article.url).hostname;
-            const favicon = `https://www.google.com/s2/favicons?domain=${domain}`;
+
+            const favicon =
+                `https://www.google.com/s2/favicons?domain=${domain}`;
+
+            const tagHTML = (article.tags || [])
+                .map(tag => `<span class="pt-tag">${tag}</span>`)
+                .join("");
 
             div.innerHTML = `
-                <img src="${favicon}" />
-                <div class="article-content">
-                    <strong>${article.title}</strong>
-                    <small>${domain}</small><br/>
-                    <a href="${article.url}" target="_blank">Open</a>
+            <img src="${favicon}" />
+
+            <div class="article-content">
+
+                <strong>${article.title}</strong>
+
+                <small>${domain}</small><br/>
+
+                <div class="pt-tag-wrap">
+                    ${tagHTML}
                 </div>
-            `;
+
+                <a href="${article.url}" target="_blank">
+                    Open
+                </a>
+
+            </div>
+        `;
 
             resultsDiv.appendChild(div);
         });
-
-        UI.updateSavedCount(articles.length);
     },
+
 
     updateSavedCount(count) {
         document.getElementById("savedCount").innerText = `${count} saved`;
-    }
+    },
 };
+
 
 // Extension-local article storage helpers.
 const Storage = {
@@ -118,6 +128,8 @@ const Storage = {
         return new Promise(resolve => {
             chrome.storage.local.set({ articles }, resolve);
         });
+
+
     },
 
     async loadArticles() {
@@ -146,30 +158,70 @@ const Actions = {
         return tab;
     },
 
-    async getPageData() {
-        const tab = await this.getActiveTab();
 
-        return new Promise((resolve, reject) => {
-            chrome.tabs.sendMessage(tab.id, { type: "GET_PAGE_DATA" }, (res) => {
+        async getPageData() {
+            const tab = await this.getActiveTab();
 
-                if (chrome.runtime.lastError || !res) {
-                    reject("Failed to read page");
-                } else {
-                    resolve(res);
-                }
+            return new Promise((resolve, reject) => {
+
+                chrome.tabs.sendMessage(
+                    tab.id,
+                    { type: "GET_PAGE_DATA" },
+                    (res) => {
+
+                        if (chrome.runtime.lastError || !res) {
+                            reject("Failed to read page");
+                        } else {
+                            resolve(res);
+                        }
+
+                    }
+                );
+
             });
-        });
+        },
+
+    async renderPagePreview(data){
+      if (!data) return;
+
+      //Title
+      document.getElementById("pageTitle").innerText = data.title;
+
+      //Domain
+        const domain = new URL(data.url).hostname;
+        document.getElementById("pageDomain").innerText = domain;
+
+      //Favicon
+      const favicon =  `https://www.google.com/s2/favicons?domain=${domain}`;
+        document.getElementById("faviconEl").innerHTML =
+            `<img src="${favicon}" />`;
+
+    // Read time
+    const words = data.text.split(/\s+/).length;
+    const mins = Math.max(1, Math.round(words / 220));
+    document.getElementById("readTime").innerText = `${mins} min read`;
     },
+
 
     async saveArticle() {
         try {
             const data = await Actions.getPageData();
+
+            const rawTags = document.getElementById("tagInput").value;
+
+            const tags = rawTags
+                .split(",")
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0);
+
+
 
             const article = {
                 id: Date.now(),
                 title: data.title,
                 url: data.url,
                 text: data.text,
+                tags: tags,
                 summary: null
             };
 
@@ -239,8 +291,19 @@ const Formatter = {
 
     summary(text) {
         return text
-            .replace("TLDR:", "\n📌 TLDR\n")
-            .replace("KEY POINTS:", "\n🔑 Key Points\n");
+            .replace("TLDR:", "\n TLDR\n")
+            .replace("KEY POINTS:", "\n Key Points\n");
+    }
+};
+
+const App = {
+    async init() {
+        UI.initTabs();
+        Actions.bindEvents();
+        Storage.loadArticles();
+
+        const data = await Actions.getPageData();
+        Actions.renderPagePreview(data); //  put it HERE
     }
 };
 
