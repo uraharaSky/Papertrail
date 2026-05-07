@@ -101,12 +101,13 @@ const UI = {
 
             resultsDiv.appendChild(div);
         });
+        UI.updateSavedCount(articles.length);
     },
 
 
     updateSavedCount(count) {
         document.getElementById("savedCount").innerText = `${count} saved`;
-    },
+    }
 };
 
 
