@@ -60,6 +60,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ summary });
         });
 
-        return true; // VERY IMPORTANT (async response)
+        return true;
     }
 });
