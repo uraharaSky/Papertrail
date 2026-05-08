@@ -57,7 +57,7 @@ def search(data: TextInput):
         results.append({
             "title": article["title"],
             "url": article["url"],
-            "text": article["text"],
+            "text": article["text"][:300],
             "score": float(score)
         })
 
