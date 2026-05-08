@@ -45,18 +45,35 @@ def search(data: TextInput):
     # Build an embedding for the incoming query text.
     query_embedding = model.encode(data.text)
 
-    best_score = -1
-    best_article = None
+    results = []
 
     for article in articles:
-        # Recompute similarity against each saved article and keep the best match.
-        score = cosine_similarity(query_embedding, np.array(article["embedding"]))
 
-        if score > best_score:
-            best_score = score
-            best_article = article
+        score = cosine_similarity(
+            query_embedding,
+            np.array(article["embedding"])
+        )
+
+        results.append({
+            "title": article["title"],
+            "url": article["url"],
+            "text": article["text"],
+            "score": float(score)
+        })
+
+    #Filtering the results
+    filtered_results = [
+        r for r in results
+        if r["score"] > 0.45
+    ]
+    # Sort highest similarity first
+    filtered_results.sort(
+        key = lambda x: x["score"],
+        reverse = True
+    )
+    # Keep top 4
+    top_results = filtered_results[:4]
 
     return {
-        "match": best_article,
-        "score": float(best_score)
+        "matches": top_results
     }
