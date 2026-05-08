@@ -430,15 +430,27 @@ body {
 }
 .pt-search-input::placeholder { color: var(--muted); opacity: 0.7; font-style: italic; }
 
-.pt-groq-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 8px;
-    background: var(--ink);
-    color: var(--paper);
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.06em;
-    flex-shrink: 0;
+.pt-search-btn{
+    border:none;
+    outline:none;
+
+    background:#1f140b;
+    color:#f7f3eb;
+
+    padding:8px 14px;
+
+    border-radius:10px;
+
+    font-size:12px;
+    font-weight:500;
+
+    cursor:pointer;
+
+    transition:opacity 0.2s ease;
+}
+
+.pt-search-btn:hover{
+    opacity:0.88;
 }
 
 .pt-search-hint {
