@@ -104,6 +104,57 @@ const UI = {
         UI.updateSavedCount(articles.length);
     },
 
+    renderSearchResults(matches) {
+
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        if (!matches.length) {
+            resultsDiv.innerHTML =
+                "Nothing relevant found.";
+            return;
+        }
+
+        matches.forEach(article => {
+            const domain =
+                new URL(article.url).hostname;
+
+            const favicon =
+                `https://www.google.com/s2/favicons?domain=${domain}`;
+
+            const div = document.createElement("div");
+
+            div.className = "article-card";
+
+            div.innerHTML = `
+            <img src="${favicon}" />
+
+            <div class="article-content">
+
+                <strong>${article.title}</strong>
+
+                <small>
+                    ${domain}
+                    •
+                    similarity:
+                    ${article.score.toFixed(2)}
+                </small>
+
+                <p class="search-snippet">
+                    ${(article.text || "").slice(0, 140)}...
+                </p>
+
+                <a href="${article.url}" target="_blank">
+                    Open
+                </a>
+
+            </div>
+        `;
+
+            resultsDiv.appendChild(div);
+        });
+    },
+
 
     updateSavedCount(count) {
         document.getElementById("savedCount").innerText = `${count} saved`;
@@ -152,6 +203,9 @@ const Actions = {
 
         // Search the saved archive on Enter.
         document.getElementById("searchInput").addEventListener("keydown", this.search);
+
+        //Search button click
+        document.getElementById("searchBtn").addEventListener("click", this.search);
     },
 
     async getActiveTab() {
@@ -230,6 +284,18 @@ const Actions = {
             UI.showToast();
             Storage.loadArticles();
 
+            await fetch("http://localhost:8000/save", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: article.title,
+                    url: article.url,
+                    text: article.text
+                })
+            });
+
         } catch (err) {
             alert(err);
         }
@@ -260,29 +326,65 @@ const Actions = {
     },
 
     async search(e) {
-        if (e.key !== "Enter") return;
 
-        const query = e.target.value.trim();
+        // Allow both Enter key and button click
+        if (
+            e.type === "keydown" &&
+            e.key !== "Enter"
+        ) {
+            return;
+        }
+
+        const query =
+            document
+                .getElementById("searchInput")
+                .value
+                .trim();
+
         if (!query) return;
 
         try {
-            const res = await fetch("http://localhost:8000/search", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: query })
-            });
+
+            const res = await fetch(
+                "http://localhost:8000/search",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        text: query
+                    })
+                }
+            );
 
             const data = await res.json();
 
-            if (!data.match) {
-                document.getElementById("results").innerText = "Nothing found...";
+            if (
+                !data.matches ||
+                !data.matches.length
+            ) {
+
+                document
+                    .getElementById("results")
+                    .innerText =
+                    "Nothing relevant found.";
+
                 return;
             }
 
-            UI.renderSearchResult(data.match);
+            UI.renderSearchResults(data.matches);
 
         } catch (err) {
-            document.getElementById("results").innerText = "Search failed.";
+
+            console.error(err);
+
+            document
+                .getElementById("results")
+                .innerText =
+                "Search failed.";
         }
     }
 };

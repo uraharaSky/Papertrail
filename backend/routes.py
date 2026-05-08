@@ -64,7 +64,7 @@ def search(data: TextInput):
     #Filtering the results
     filtered_results = [
         r for r in results
-        if r["score"] > 0.45
+        if r["score"] > 0.25
     ]
     # Sort highest similarity first
     filtered_results.sort(
